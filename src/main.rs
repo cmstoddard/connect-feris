@@ -55,45 +55,66 @@ impl Board {
             turn: 0,
         }
     }
+    fn paint_meme(&mut self, ui: &mut egui::Ui) {
+        for x_cord in 0..9 {
+            ui.horizontal(|ui| {
+                for y_cord in 0..9 {
+                    let x = &self.board_layout.get(&(x_cord, y_cord)).unwrap();
+                    let b = egui::Button::new(format!("{}", x.slot_value))
+                        .min_size(Vec2::new(30.0, 30.0));
+                    ui.add(b);
+                }
+            });
+        }
+    }
 }
 
 impl eframe::App for Board {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Connect Feris");
-            let mut curr_count = 0;
-            for x_cord in 0..9 {
-                ui.horizontal(|ui| {
-                    for y_cord in 0..9 {
-                        let mut curr = self.board_layout.get_mut(&(x_cord, y_cord)).unwrap();
-                        let b = egui::Button::new(&curr.slot_value).min_size(Vec2::new(50.0, 50.0));
-                        if ui
-                            //.button(&curr.slot_value)
-                            .add(b)
-                            .on_hover_text(format!(
-                                "x: {}, y: {}",
-                                curr.x_coordinate, curr.y_coordinate
-                            ))
-                            .clicked()
-                        {
-                            if curr.slot_value == String::from("  ") {
-                                if self.turn == 0 {
-                                    curr.slot_value = String::from("X");
-                                    self.turn = 1;
-                                } else {
-                                    curr.slot_value = String::from("O");
-                                    self.turn = 0;
-                                }
-                            }
-                            println!(
-                                "{},{},{}",
-                                curr.x_coordinate, curr.y_coordinate, curr.slot_value
-                            );
-                        };
-                        curr_count += 1;
-                    }
-                });
-            }
+            ui.label("hi mom");
+            self.paint_meme(ui);
         });
     }
 }
+
+// impl eframe::App for Board {
+//     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+//         egui::CentralPanel::default().show(ctx, |ui| {
+//             ui.heading("Connect Feris");
+//             let mut curr_count = 0;
+//             for x_cord in 0..9 {
+//                 ui.horizontal(|ui| {
+//                     for y_cord in 0..9 {
+//                         let mut curr = self.board_layout.get_mut(&(x_cord, y_cord)).unwrap();
+//                         let b = egui::Button::new(&curr.slot_value).min_size(Vec2::new(50.0, 50.0));
+//                         if ui
+//                             //.button(&curr.slot_value)
+//                             .add(b)
+//                             .on_hover_text(format!(
+//                                 "x: {}, y: {}",
+//                                 curr.x_coordinate, curr.y_coordinate
+//                             ))
+//                             .clicked()
+//                         {
+//                             if curr.slot_value == String::from("  ") {
+//                                 if self.turn == 0 {
+//                                     curr.slot_value = String::from("X");
+//                                     self.turn = 1;
+//                                 } else {
+//                                     curr.slot_value = String::from("O");
+//                                     self.turn = 0;
+//                                 }
+//                             }
+//                             println!(
+//                                 "{},{},{}",
+//                                 curr.x_coordinate, curr.y_coordinate, curr.slot_value
+//                             );
+//                         };
+//                         curr_count += 1;
+//                     }
+//                 });
+//             }
+//         });
+//     }
+// }
