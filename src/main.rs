@@ -35,6 +35,7 @@ impl Default for Board {
         let mut b = Board::new();
         for y_cord in 0..9 {
             for x_cord in 0..9 {
+                println!("x:{},y:{}", x_cord, y_cord);
                 let bl = BoardSlot {
                     x_coordinate: x_cord,
                     y_coordinate: y_cord,
@@ -47,7 +48,6 @@ impl Default for Board {
         b
     }
 }
-
 impl Board {
     fn new() -> Self {
         Board {
@@ -58,9 +58,9 @@ impl Board {
         }
     }
     fn paint_meme(&mut self, ui: &mut egui::Ui) {
-        for x_cord in 0..9 {
+        for y_cord in 0..9 {
             ui.horizontal(|ui| {
-                for y_cord in 0..9 {
+                for x_cord in 0..9 {
                     let x = self.board_layout.get(&(x_cord, y_cord)).unwrap();
                     //let b = egui::Button::new(format!("{}", x.slot_value))
                     let b = egui::Button::new(format!("{}", x.slot_value))
@@ -71,9 +71,8 @@ impl Board {
                             .on_hover_text(format!("x: {}, y: {}", x.x_coordinate, x.y_coordinate))
                             .clicked()
                         {
-                            format!("{},{},{}", x.x_coordinate, x.y_coordinate, x.slot_value);
                             self.change_value_slot(x_cord, y_cord);
-                            self.check_if_won(5);
+                            self.check_if_won(x_cord, y_cord);
                         };
                     } else {
                         ui.add_enabled(false, b)
@@ -95,9 +94,32 @@ impl Board {
                 self.turn = 0;
             }
         }
+        //println!(
+        //    "{},{},{}",
+        //    board_slot.x_coordinate, board_slot.y_coordinate, board_slot.slot_value
+        //);
     }
-    fn check_if_won(&mut self, x: i32) {
-        self.win_state = true;
+    fn check_if_won(&mut self, x: i32, y: i32) {
+        //self.win_state = true;
+        //check vertically
+        let mut count = 1;
+        if let Some(value) = self.board_layout.get(&(x, y)) {
+            for i in 1..4 {
+                if let Some(vert_up) = self.board_layout.get(&(x, y - i)) {
+                    if value.slot_value == vert_up.slot_value {
+                        count += 1;
+                    }
+                }
+                if let Some(vert_up) = self.board_layout.get(&(x, y + i)) {
+                    if value.slot_value == vert_up.slot_value {
+                        count += 1;
+                    }
+                }
+            }
+            if count == 4 {
+                self.win_state = true;
+            }
+        }
     }
 }
 
