@@ -21,6 +21,7 @@ struct Board {
     //board_layout: Vec<BoardSlot>,
     board_layout: std::collections::HashMap<(i32, i32), BoardSlot>,
     turn: i32,
+    win_state: bool,
 }
 
 struct BoardSlot {
@@ -53,19 +54,50 @@ impl Board {
             //board_layout: Vec::new(),
             board_layout: HashMap::new(),
             turn: 0,
+            win_state: false,
         }
     }
     fn paint_meme(&mut self, ui: &mut egui::Ui) {
         for x_cord in 0..9 {
             ui.horizontal(|ui| {
                 for y_cord in 0..9 {
-                    let x = &self.board_layout.get(&(x_cord, y_cord)).unwrap();
+                    let x = self.board_layout.get(&(x_cord, y_cord)).unwrap();
+                    //let b = egui::Button::new(format!("{}", x.slot_value))
                     let b = egui::Button::new(format!("{}", x.slot_value))
                         .min_size(Vec2::new(30.0, 30.0));
-                    ui.add(b);
+                    if !self.win_state {
+                        if ui
+                            .add_enabled(true, b)
+                            .on_hover_text(format!("x: {}, y: {}", x.x_coordinate, x.y_coordinate))
+                            .clicked()
+                        {
+                            format!("{},{},{}", x.x_coordinate, x.y_coordinate, x.slot_value);
+                            self.change_value_slot(x_cord, y_cord);
+                            self.check_if_won(5);
+                        };
+                    } else {
+                        ui.add_enabled(false, b)
+                            .on_hover_text(format!("x: {}, y: {}", x.x_coordinate, x.y_coordinate));
+                    }
                 }
             });
         }
+    }
+    fn change_value_slot(&mut self, x: i32, y: i32) {
+        let turn = self.turn;
+        let board_slot = self.board_layout.get_mut(&(x, y)).unwrap();
+        if board_slot.slot_value == String::from("  ") {
+            if turn == 0 {
+                board_slot.slot_value = String::from(" O ");
+                self.turn = 1;
+            } else {
+                board_slot.slot_value = String::from(" X ");
+                self.turn = 0;
+            }
+        }
+    }
+    fn check_if_won(&mut self, x: i32) {
+        self.win_state = true;
     }
 }
 
