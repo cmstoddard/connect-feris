@@ -1,12 +1,12 @@
 use eframe::egui;
 use egui::Vec2;
-use std::collections::HashMap;
+use std::{borrow::Borrow, collections::HashMap};
 
 fn main() {
     // Log to stdout (if you run with `RUST_LOG=debug`).
 
     let options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(320.0, 240.0)),
+        initial_window_size: Some(egui::vec2(530.0, 510.0)),
         ..Default::default()
     };
 
@@ -35,7 +35,6 @@ impl Default for Board {
         let mut b = Board::new();
         for y_cord in 0..9 {
             for x_cord in 0..9 {
-                println!("x:{},y:{}", x_cord, y_cord);
                 let bl = BoardSlot {
                     x_coordinate: x_cord,
                     y_coordinate: y_cord,
@@ -61,22 +60,27 @@ impl Board {
         for y_cord in 0..9 {
             ui.horizontal(|ui| {
                 for x_cord in 0..9 {
-                    let x = self.board_layout.get(&(x_cord, y_cord)).unwrap();
+                    let current_slot = self.board_layout.get(&(x_cord, y_cord)).unwrap();
                     //let b = egui::Button::new(format!("{}", x.slot_value))
-                    let b = egui::Button::new(format!("{}", x.slot_value))
-                        .min_size(Vec2::new(30.0, 30.0));
+                    let b = egui::Button::new(format!("{}", current_slot.slot_value))
+                        .min_size(Vec2::new(50.0, 50.0));
                     if !self.win_state {
                         if ui
                             .add_enabled(true, b)
-                            .on_hover_text(format!("x: {}, y: {}", x.x_coordinate, x.y_coordinate))
+                            .on_hover_text(format!(
+                                "x: {}, y: {}",
+                                current_slot.x_coordinate, current_slot.y_coordinate
+                            ))
                             .clicked()
                         {
                             self.change_value_slot(x_cord, y_cord);
                             self.check_if_won(x_cord, y_cord);
                         };
                     } else {
-                        ui.add_enabled(false, b)
-                            .on_hover_text(format!("x: {}, y: {}", x.x_coordinate, x.y_coordinate));
+                        ui.add_enabled(false, b).on_hover_text(format!(
+                            "x: {}, y: {}",
+                            current_slot.x_coordinate, current_slot.y_coordinate
+                        ));
                     }
                 }
             });
@@ -94,27 +98,171 @@ impl Board {
                 self.turn = 0;
             }
         }
-        //println!(
-        //    "{},{},{}",
-        //    board_slot.x_coordinate, board_slot.y_coordinate, board_slot.slot_value
-        //);
     }
     fn check_if_won(&mut self, x: i32, y: i32) {
-        //self.win_state = true;
-        //check vertically
-        let mut count = 1;
+        self.check_if_won_horizontally(x, y);
+        self.check_if_won_vertically(x, y);
+        self.check_if_won_diag_lr(x, y);
+        self.check_if_won_diag_rl(x, y);
+    }
+
+    fn check_if_won_vertically(&mut self, x: i32, y: i32) {
+        
+        //check if won vertically
         if let Some(value) = self.board_layout.get(&(x, y)) {
-            for i in 1..4 {
-                if let Some(vert_up) = self.board_layout.get(&(x, y - i)) {
-                    if value.slot_value == vert_up.slot_value {
-                        count += 1;
+            //looking for 4 in a sequence
+            let mut iterations = 0;
+            //this is the distance from the origin, to the current point
+            let mut needle = 1;
+            //0 is moving left, 1 is moving right to search
+            let mut direction_of_needle = 0;
+            //consecutive slots of the same value
+            let mut count = 1;
+            while iterations < 4 {
+                if direction_of_needle == 0 {
+                    if let Some(vert_up) = self.board_layout.get(&(x, y - needle)) {
+                        if value.slot_value == vert_up.slot_value {
+                            count += 1;
+                            needle += 1;
+                        } else {
+                            direction_of_needle = 1;
+                            needle = 1;
+                        }
+                    }
+                } else {
+                    if let Some(vert_up) = self.board_layout.get(&(x, y + needle)) {
+                        if value.slot_value == vert_up.slot_value {
+                            count += 1;
+                            needle += 1;
+                        } else {
+                            break;
+                        }
                     }
                 }
-                if let Some(vert_up) = self.board_layout.get(&(x, y + i)) {
-                    if value.slot_value == vert_up.slot_value {
-                        count += 1;
+                iterations += 1;
+            }
+            if count == 4 {
+                self.win_state = true;
+            }
+        }
+    }
+
+    fn check_if_won_horizontally(&mut self, x: i32, y: i32) {
+        
+        //check if won horizontally
+        if let Some(value) = self.board_layout.get(&(x, y)) {
+            //looking for 4 in a sequence
+            let mut iterations = 0;
+            //this is the distance from the origin, to the current point
+            let mut needle = 1;
+            //0 is moving left, 1 is moving right to search
+            let mut direction_of_needle = 0;
+            //consecutive slots of the same value
+            let mut count = 1;
+            while iterations < 4 {
+                if direction_of_needle == 0 {
+                    if let Some(vert_up) = self.board_layout.get(&(x - needle, y)) {
+                        if value.slot_value == vert_up.slot_value {
+                            count += 1;
+                            needle += 1;
+                        } else {
+                            direction_of_needle = 1;
+                            needle = 1;
+                        }
+                    }
+                } else {
+                    if let Some(vert_up) = self.board_layout.get(&(x + needle, y)) {
+                        if value.slot_value == vert_up.slot_value {
+                            count += 1;
+                            needle += 1;
+                        } else {
+                            break;
+                        }
                     }
                 }
+                iterations += 1;
+            }
+            if count == 4 {
+                self.win_state = true;
+            }
+        }
+    }
+
+    fn check_if_won_diag_lr(&mut self, x: i32, y: i32) {
+        
+        if let Some(value) = self.board_layout.get(&(x, y)) {
+            //looking for 4 in a sequence
+            let mut iterations = 0;
+            //this is the distance from the origin, to the current point
+            let mut needle = 1;
+            //0 is moving left, 1 is moving right to search
+            let mut direction_of_needle = 0;
+            //consecutive slots of the same value
+            let mut count = 1;
+
+            while iterations < 4 {
+                if direction_of_needle == 0 {
+                    if let Some(vert_up) = self.board_layout.get(&(x - needle, y + needle)) {
+                        if value.slot_value == vert_up.slot_value {
+                            count += 1;
+                            needle += 1;
+                        } else {
+                            direction_of_needle = 1;
+                            needle = 1;
+                        }
+                    }
+                } else {
+                    if let Some(vert_up) = self.board_layout.get(&(x + needle, y - needle)) {
+                        if value.slot_value == vert_up.slot_value {
+                            count += 1;
+                            needle += 1;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                iterations += 1;
+            }
+            if count == 4 {
+                self.win_state = true;
+            }
+        }
+    }
+
+    fn check_if_won_diag_rl(&mut self, x: i32, y: i32) {
+        
+        if let Some(value) = self.board_layout.get(&(x, y)) {
+            //looking for 4 in a sequence
+            let mut iterations = 0;
+            //this is the distance from the origin, to the current point
+            let mut needle = 1;
+            //0 is moving left, 1 is moving right to search
+            let mut direction_of_needle = 0;
+            //consecutive slots of the same value
+            let mut count = 1;
+
+            while iterations < 4 {
+                if direction_of_needle == 0 {
+                    if let Some(vert_up) = self.board_layout.get(&(x + needle, y + needle)) {
+                        if value.slot_value == vert_up.slot_value {
+                            count += 1;
+                            needle += 1;
+                        } else {
+                            direction_of_needle = 1;
+                            needle = 1;
+                        }
+                    }
+                } else {
+                    if let Some(vert_up) = self.board_layout.get(&(x - needle, y - needle)) {
+                        if value.slot_value == vert_up.slot_value {
+                            count += 1;
+                            needle += 1;
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                iterations += 1;
             }
             if count == 4 {
                 self.win_state = true;
@@ -125,50 +273,10 @@ impl Board {
 
 impl eframe::App for Board {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        //egui::CentralPanel::default().show(ctx, |ui| {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label("hi mom");
+            ui.label("connect feris :)");
             self.paint_meme(ui);
         });
     }
 }
-
-// impl eframe::App for Board {
-//     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-//         egui::CentralPanel::default().show(ctx, |ui| {
-//             ui.heading("Connect Feris");
-//             let mut curr_count = 0;
-//             for x_cord in 0..9 {
-//                 ui.horizontal(|ui| {
-//                     for y_cord in 0..9 {
-//                         let mut curr = self.board_layout.get_mut(&(x_cord, y_cord)).unwrap();
-//                         let b = egui::Button::new(&curr.slot_value).min_size(Vec2::new(50.0, 50.0));
-//                         if ui
-//                             //.button(&curr.slot_value)
-//                             .add(b)
-//                             .on_hover_text(format!(
-//                                 "x: {}, y: {}",
-//                                 curr.x_coordinate, curr.y_coordinate
-//                             ))
-//                             .clicked()
-//                         {
-//                             if curr.slot_value == String::from("  ") {
-//                                 if self.turn == 0 {
-//                                     curr.slot_value = String::from("X");
-//                                     self.turn = 1;
-//                                 } else {
-//                                     curr.slot_value = String::from("O");
-//                                     self.turn = 0;
-//                                 }
-//                             }
-//                             println!(
-//                                 "{},{},{}",
-//                                 curr.x_coordinate, curr.y_coordinate, curr.slot_value
-//                             );
-//                         };
-//                         curr_count += 1;
-//                     }
-//                 });
-//             }
-//         });
-//     }
-// }
