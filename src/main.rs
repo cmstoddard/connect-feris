@@ -21,6 +21,7 @@ struct Board {
     board_layout: std::collections::HashMap<(i32, i32), BoardSlot>,
     turn: i32,
     win_state: bool,
+    win_slots: Vec<(i32, i32)>,
 }
 
 struct BoardSlot {
@@ -53,6 +54,7 @@ impl Board {
             board_layout: HashMap::new(),
             turn: 0,
             win_state: false,
+            win_slots: Vec::new(),
         }
     }
     fn paint_board(&mut self, ui: &mut egui::Ui) {
@@ -76,10 +78,18 @@ impl Board {
                             self.check_if_won(x_cord, y_cord);
                         };
                     } else {
-                        ui.add_enabled(false, b).on_hover_text(format!(
-                            "x: {}, y: {}",
-                            current_slot.x_coordinate, current_slot.y_coordinate
-                        ));
+                        if self.win_slots.contains(&(x_cord, y_cord)) {
+                            ui.add_enabled(false, b.fill(egui::Color32::YELLOW))
+                                .on_hover_text(format!(
+                                    "x: {}, y: {}",
+                                    current_slot.x_coordinate, current_slot.y_coordinate
+                                ));
+                        } else {
+                            ui.add_enabled(false, b).on_hover_text(format!(
+                                "x: {}, y: {}",
+                                current_slot.x_coordinate, current_slot.y_coordinate
+                            ));
+                        }
                     }
                 }
             });
@@ -106,6 +116,8 @@ impl Board {
         self.check_if_won_diag_rl(x, y);
     }
 
+    //TODO: you could make an enum with the values of x and y, and the vector that you want checked
+    //to get rid of the 4 functions
     fn check_if_won_vertically(&mut self, x: i32, y: i32) {
         //check if won vertically
         if let Some(value) = self.board_layout.get(&(x, y)) {
@@ -117,10 +129,13 @@ impl Board {
             let mut direction_of_needle = 0;
             //consecutive slots of the same value
             let mut count = 1;
+
+            let mut winning_slots: Vec<(i32, i32)> = Vec::new();
             while iterations < 4 {
                 if direction_of_needle == 0 {
                     if let Some(vert_up) = self.board_layout.get(&(x, y - needle)) {
                         if value.slot_value == vert_up.slot_value {
+                            winning_slots.push((x, y - needle));
                             count += 1;
                             needle += 1;
                         } else {
@@ -131,6 +146,7 @@ impl Board {
                 } else {
                     if let Some(vert_up) = self.board_layout.get(&(x, y + needle)) {
                         if value.slot_value == vert_up.slot_value {
+                            winning_slots.push((x, y + needle));
                             count += 1;
                             needle += 1;
                         } else {
@@ -142,6 +158,10 @@ impl Board {
             }
             if count == 4 {
                 self.win_state = true;
+                winning_slots.push((x, y));
+                self.win_slots = winning_slots;
+            } else {
+                winning_slots.clear();
             }
         }
     }
