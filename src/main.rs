@@ -1,6 +1,6 @@
 use eframe::egui;
 use egui::Vec2;
-use std::{borrow::Borrow, collections::HashMap};
+use std::collections::HashMap;
 
 fn main() {
     // Log to stdout (if you run with `RUST_LOG=debug`).
@@ -18,7 +18,6 @@ fn main() {
 }
 
 struct Board {
-    //board_layout: Vec<BoardSlot>,
     board_layout: std::collections::HashMap<(i32, i32), BoardSlot>,
     turn: i32,
     win_state: bool,
@@ -56,7 +55,7 @@ impl Board {
             win_state: false,
         }
     }
-    fn paint_meme(&mut self, ui: &mut egui::Ui) {
+    fn paint_board(&mut self, ui: &mut egui::Ui) {
         for y_cord in 0..9 {
             ui.horizontal(|ui| {
                 for x_cord in 0..9 {
@@ -89,6 +88,7 @@ impl Board {
     fn change_value_slot(&mut self, x: i32, y: i32) {
         let turn = self.turn;
         let board_slot = self.board_layout.get_mut(&(x, y)).unwrap();
+        //TODO: refactor slot_value
         if board_slot.slot_value == String::from("  ") {
             if turn == 0 {
                 board_slot.slot_value = String::from(" O ");
@@ -107,7 +107,6 @@ impl Board {
     }
 
     fn check_if_won_vertically(&mut self, x: i32, y: i32) {
-        
         //check if won vertically
         if let Some(value) = self.board_layout.get(&(x, y)) {
             //looking for 4 in a sequence
@@ -148,7 +147,6 @@ impl Board {
     }
 
     fn check_if_won_horizontally(&mut self, x: i32, y: i32) {
-        
         //check if won horizontally
         if let Some(value) = self.board_layout.get(&(x, y)) {
             //looking for 4 in a sequence
@@ -189,7 +187,6 @@ impl Board {
     }
 
     fn check_if_won_diag_lr(&mut self, x: i32, y: i32) {
-        
         if let Some(value) = self.board_layout.get(&(x, y)) {
             //looking for 4 in a sequence
             let mut iterations = 0;
@@ -230,7 +227,6 @@ impl Board {
     }
 
     fn check_if_won_diag_rl(&mut self, x: i32, y: i32) {
-        
         if let Some(value) = self.board_layout.get(&(x, y)) {
             //looking for 4 in a sequence
             let mut iterations = 0;
@@ -276,7 +272,7 @@ impl eframe::App for Board {
         //egui::CentralPanel::default().show(ctx, |ui| {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.label("connect feris :)");
-            self.paint_meme(ui);
+            self.paint_board(ui);
         });
     }
 }
