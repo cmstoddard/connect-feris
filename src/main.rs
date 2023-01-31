@@ -57,6 +57,9 @@ impl Board {
             win_slots: Vec::new(),
         }
     }
+    fn reset(&mut self) {
+        *self = Self::default();
+    }
     fn paint_board(&mut self, ui: &mut egui::Ui) {
         for y_cord in 0..9 {
             ui.horizontal(|ui| {
@@ -289,9 +292,20 @@ impl Board {
 
 impl eframe::App for Board {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        //egui::CentralPanel::default().show(ctx, |ui| {
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.label("connect feris :)");
+            let reset_button = egui::Button::new("RESET GAME");
+            ui.horizontal_top(|ui| {
+                ui.label("CONNECT FERRIS");
+                if ui.add(reset_button).clicked() {
+                    self.reset();
+                }
+                if self.turn == 0 {
+                    ui.label("O's turn");
+                } else {
+                    ui.label("X's turn");
+                }
+            });
+
             self.paint_board(ui);
         });
     }
