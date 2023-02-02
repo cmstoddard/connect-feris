@@ -120,16 +120,16 @@ impl Board {
         //self.check_if_won_vertically(x, y);
         //self.check_if_won_diag_lr(x, y);
         //self.check_if_won_diag_rl(x, y);
-        self.meme(x, y, Direction::Vertical);
-        self.meme(x, y, Direction::Horizontal);
-        self.meme(x, y, Direction::DiagonalLR);
-        self.meme(x, y, Direction::DiagonalRL);
+        self.check_win_condition(x, y, Direction::Vertical);
+        self.check_win_condition(x, y, Direction::Horizontal);
+        self.check_win_condition(x, y, Direction::DiagonalLR);
+        self.check_win_condition(x, y, Direction::DiagonalRL);
     }
 
     //TODO: you could make an enum with the values of x and y, and the vector that you want checked
     //to get rid of the 4 functions
 
-    fn meme(&mut self, x: i32, y: i32, direction: Direction) {
+    fn check_win_condition(&mut self, x: i32, y: i32, direction: Direction) {
         if let Some(value) = self.board_layout.get(&(x, y)) {
             //looking for 4 in a sequence
             let mut iterations = 0;
