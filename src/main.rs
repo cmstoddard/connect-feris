@@ -126,9 +126,6 @@ impl Board {
         self.check_win_condition(x, y, Direction::DiagonalRL);
     }
 
-    //TODO: you could make an enum with the values of x and y, and the vector that you want checked
-    //to get rid of the 4 functions
-
     fn check_win_condition(&mut self, x: i32, y: i32, direction: Direction) {
         if let Some(value) = self.board_layout.get(&(x, y)) {
             //looking for 4 in a sequence
@@ -196,7 +193,7 @@ impl Board {
                         iterations += 1;
                     }
                 }
-                Direction::DiagonalLR=> {
+                Direction::DiagonalLR => {
                     while iterations < 4 {
                         if direction_of_needle == 0 {
                             if let Some(vert_up) = self.board_layout.get(&(x + needle, y - needle))
@@ -225,7 +222,7 @@ impl Board {
                         iterations += 1;
                     }
                 }
-                Direction::DiagonalRL=> {
+                Direction::DiagonalRL => {
                     while iterations < 4 {
                         if direction_of_needle == 0 {
                             if let Some(vert_up) = self.board_layout.get(&(x + needle, y + needle))
