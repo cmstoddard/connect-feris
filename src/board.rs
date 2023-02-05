@@ -2,7 +2,7 @@ use eframe::egui;
 use egui::Vec2;
 use std::collections::HashMap;
 
-enum Direction {
+pub enum Direction {
     Vertical,
     Horizontal,
     DiagonalLR,
@@ -67,7 +67,7 @@ impl Board {
                             .clicked()
                         {
                             log::debug!("Selected: x: {}, y: {}", x_cord, y_cord);
-                            self.change_value_slot(x_cord, y_cord);
+                            self.change_value_slot(x_cord, y_cord, self.turn);
                             self.check_if_won(x_cord, y_cord);
                         };
                     } else {
@@ -88,8 +88,8 @@ impl Board {
             });
         }
     }
-    fn change_value_slot(&mut self, x: i32, y: i32) {
-        let turn = self.turn;
+    fn change_value_slot(&mut self, x: i32, y: i32, current_turn: i32) {
+        let turn = current_turn;
         let board_slot = self.board_layout.get_mut(&(x, y)).unwrap();
         //TODO: refactor slot_value
         if board_slot.slot_value == String::from("  ") {
@@ -129,6 +129,7 @@ impl Board {
                 Direction::Vertical => {
                     while iterations < 4 {
                         if direction_of_needle == 0 {
+                            //can't one line these if's because rust is dumb
                             if let Some(vert_up) = self.board_layout.get(&(x, y - needle)) {
                                 if value.slot_value == vert_up.slot_value {
                                     winning_slots.push((x, y - needle));
@@ -138,6 +139,9 @@ impl Board {
                                     direction_of_needle = 1;
                                     needle = 1;
                                 }
+                            } else {
+                                direction_of_needle = 1;
+                                needle = 1;
                             }
                         } else {
                             if let Some(vert_up) = self.board_layout.get(&(x, y + needle)) {
@@ -148,6 +152,8 @@ impl Board {
                                 } else {
                                     break;
                                 }
+                            } else {
+                                break;
                             }
                         }
                         iterations += 1;
@@ -165,9 +171,14 @@ impl Board {
                                     direction_of_needle = 1;
                                     needle = 1;
                                 }
+                            } else {
+                                direction_of_needle = 1;
+                                needle = 1;
                             }
                         } else {
+                            // TODO: change vert_up
                             if let Some(vert_up) = self.board_layout.get(&(x + needle, y)) {
+                                println!("hi mom");
                                 if value.slot_value == vert_up.slot_value {
                                     winning_slots.push((x + needle, y));
                                     count += 1;
@@ -175,8 +186,11 @@ impl Board {
                                 } else {
                                     break;
                                 }
+                            } else {
+                                break;
                             }
                         }
+
                         iterations += 1;
                     }
                 }
@@ -193,6 +207,9 @@ impl Board {
                                     direction_of_needle = 1;
                                     needle = 1;
                                 }
+                            } else {
+                                direction_of_needle = 1;
+                                needle = 1;
                             }
                         } else {
                             if let Some(vert_up) = self.board_layout.get(&(x - needle, y + needle))
@@ -204,6 +221,8 @@ impl Board {
                                 } else {
                                     break;
                                 }
+                            } else {
+                                break;
                             }
                         }
                         iterations += 1;
@@ -222,6 +241,9 @@ impl Board {
                                     direction_of_needle = 1;
                                     needle = 1;
                                 }
+                            } else {
+                                direction_of_needle = 1;
+                                needle = 1;
                             }
                         } else {
                             if let Some(vert_up) = self.board_layout.get(&(x - needle, y - needle))
@@ -233,6 +255,8 @@ impl Board {
                                 } else {
                                     break;
                                 }
+                            } else {
+                                break;
                             }
                         }
                         iterations += 1;
@@ -241,6 +265,7 @@ impl Board {
             }
 
             if count == 4 {
+                println!("hi mom");
                 self.win_state = true;
                 winning_slots.push((x, y));
                 self.win_slots = winning_slots;
@@ -274,9 +299,16 @@ impl eframe::App for Board {
 
 #[cfg(test)]
 mod tests {
-    
+    use crate::Board;
     #[test]
     fn meme() {
-        assert_eq!(true,true);
+        let mut b = Board::default();
+        b.change_value_slot(0, 0, 0);
+        b.change_value_slot(1, 0, 0);
+        b.change_value_slot(2, 0, 0);
+        b.change_value_slot(3, 0, 0);
+
+        b.check_if_won(1, 0);
+        assert_eq!(b.win_state, true)
     }
 }
