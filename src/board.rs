@@ -265,7 +265,6 @@ impl Board {
             }
 
             if count == 4 {
-                println!("hi mom");
                 self.win_state = true;
                 winning_slots.push((x, y));
                 self.win_slots = winning_slots;
@@ -301,7 +300,7 @@ impl eframe::App for Board {
 mod tests {
     use crate::Board;
     #[test]
-    fn meme() {
+    fn test_horizontal() {
         let mut b = Board::default();
         b.change_value_slot(0, 0, 0);
         b.change_value_slot(1, 0, 0);
@@ -309,6 +308,39 @@ mod tests {
         b.change_value_slot(3, 0, 0);
 
         b.check_if_won(1, 0);
+        assert_eq!(b.win_state, true)
+    }
+    #[test]
+    fn test_vertical() {
+        let mut b = Board::default();
+        b.change_value_slot(0, 1, 0);
+        b.change_value_slot(0, 2, 0);
+        b.change_value_slot(0, 3, 0);
+        b.change_value_slot(0, 4, 0);
+
+        b.check_if_won(0, 1);
+        assert_eq!(b.win_state, true)
+    }
+    #[test]
+    fn test_diag_lr() {
+        let mut b = Board::default();
+        b.change_value_slot(0, 8, 0);
+        b.change_value_slot(1, 7, 0);
+        b.change_value_slot(2, 6, 0);
+        b.change_value_slot(3, 5, 0);
+
+        b.check_if_won(0, 1);
+        assert_eq!(b.win_state, true)
+    }
+    #[test]
+    fn test_diag_rl() {
+        let mut b = Board::default();
+        b.change_value_slot(8, 8, 0);
+        b.change_value_slot(7, 7, 0);
+        b.change_value_slot(6, 6, 0);
+        b.change_value_slot(5, 5, 0);
+
+        b.check_if_won(0, 1);
         assert_eq!(b.win_state, true)
     }
 }
