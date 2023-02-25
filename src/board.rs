@@ -8,13 +8,14 @@ pub enum Direction {
     DiagonalLR,
     DiagonalRL,
 }
+#[derive(Clone)]
 pub struct Board {
-    board_layout: std::collections::HashMap<(i32, i32), BoardSlot>,
+    board_layout: HashMap<(i32, i32), BoardSlot>,
     turn: i32,
     win_state: bool,
     win_slots: Vec<(i32, i32)>,
 }
-
+#[derive(Clone)]
 pub struct BoardSlot {
     x_coordinate: i32,
     y_coordinate: i32,
