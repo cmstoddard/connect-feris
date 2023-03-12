@@ -14,4 +14,3 @@ pub fn main() {
         Box::new(|_cc| Box::new(Board::default())),
     )
 }
-

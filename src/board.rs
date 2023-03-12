@@ -128,36 +128,38 @@ impl Board {
 
             match direction {
                 Direction::Vertical => {
-                    while iterations < 4 {
-                        if direction_of_needle == 0 {
-                            //can't one line these if's because rust is dumb
-                            if let Some(vert_up) = self.board_layout.get(&(x, y - needle)) {
-                                if value.slot_value == vert_up.slot_value {
-                                    winning_slots.push((x, y - needle));
-                                    count += 1;
-                                    needle += 1;
-                                } else {
-                                    direction_of_needle = 1;
-                                    needle = 1;
-                                }
+                    let mut slots_left: Vec<(&str, i32, i32)> = Vec::new();
+                    let mut slots_right: Vec<(&str, i32, i32)> = Vec::new();
+                    // we are doing this twice, as we want to break out of the loop if the board slot at x-i/x+i isn't the same value
+                    // as the board slot value of value
+                    // TODO: this could all be made with one loop checking all vectors,
+                    // don't be lazy and fix this
+
+                    for i in 1..4 {
+                        if let Some(slot) = self.board_layout.get(&(x, y + i)) {
+                            if slot.slot_value != value.slot_value {
                             } else {
-                                direction_of_needle = 1;
-                                needle = 1;
-                            }
-                        } else {
-                            if let Some(vert_up) = self.board_layout.get(&(x, y + needle)) {
-                                if value.slot_value == vert_up.slot_value {
-                                    winning_slots.push((x, y + needle));
-                                    count += 1;
-                                    needle += 1;
-                                } else {
-                                    break;
-                                }
-                            } else {
-                                break;
+                                slots_left.push((slot.slot_value.as_str(), x, y + i));
                             }
                         }
-                        iterations += 1;
+                    }
+                    for i in 1..4 {
+                        if let Some(slot) = self.board_layout.get(&(x, y - i)) {
+                            if slot.slot_value != value.slot_value {
+                                break;
+                            } else {
+                                slots_right.push((slot.slot_value.as_str(), x, y-i));
+                            }
+                        }
+                    }
+                    //this just appends the left and right vecs, and now slots_right no longer exists after this
+                    slots_left.push((value.slot_value.as_str(),x,y));
+                    slots_left.append(&mut slots_right);
+                    if let Some(value) =
+                        Board::check_potential_win(slots_left, value.slot_value.clone())
+                    {
+                        self.win_slots = value;
+                        self.win_state = true;
                     }
                 }
                 Direction::Horizontal => {
@@ -179,7 +181,6 @@ impl Board {
                         } else {
                             // TODO: change vert_up
                             if let Some(vert_up) = self.board_layout.get(&(x + needle, y)) {
-                                println!("hi mom");
                                 if value.slot_value == vert_up.slot_value {
                                     winning_slots.push((x + needle, y));
                                     count += 1;
@@ -264,7 +265,6 @@ impl Board {
                     }
                 }
             }
-
             if count == 4 {
                 self.win_state = true;
                 winning_slots.push((x, y));
@@ -273,6 +273,24 @@ impl Board {
                 winning_slots.clear();
             }
         }
+    }
+    fn check_potential_win(
+        slots_values: Vec<(&str, i32, i32)>,
+        slot_value: String,
+    ) -> Option<Vec<(i32, i32)>> {
+        let mut stack: Vec<(i32, i32)> = Vec::new();
+        for slot in slots_values.iter() {
+            //should this be 0?
+            if slot.0 == slot_value {
+                stack.push((slot.1, slot.2));
+                if stack.len() == 4 {
+                    return Some(stack.clone());
+                }
+            } else {
+                stack.clear();
+            }
+        }
+        return None;
     }
 }
 
